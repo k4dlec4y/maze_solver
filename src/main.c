@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include <assert.h>
 
-#include "maze.h"
 #include "check.h"
 #include "solve.h"
 
@@ -101,28 +100,6 @@ bool creating_the_matrix(matrix_t* matrix, maze_t* maze, char* char_pointer)
     return true;
 }
 
-bool check(matrix_t* matrix, maze_t* maze)
-{
-    if (!restrict_matrix(maze, matrix))
-    {
-        maze_destroy(maze); maze = NULL;
-        matrix_destroy(matrix); matrix = NULL;
-        return false;
-    }
-
-    maze->lowest_x = maze->starting_wall.x;
-    maze->highest_x = maze->starting_wall.x;
-    maze->highest_y = 0;
-
-    if (!check_outside(move(maze->starting_wall, EAST), EAST, maze, matrix))
-    {
-        maze_destroy(maze); maze = NULL;
-        matrix_destroy(matrix); matrix = NULL;
-        return false;
-    }
-    return true;
-}
-
 bool solve(char* path, matrix_t* matrix, maze_t* maze)
 {
     position_t start = move(maze->fst_ent, maze->solve_start_dir);
@@ -171,7 +148,7 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    if (!check(matrix, maze))
+    if (!check(maze, matrix))
     {
         return EXIT_FAILURE;
     }
