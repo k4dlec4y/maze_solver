@@ -16,10 +16,6 @@ void set_maze(maze_t** maze)
     (*maze)->line_with_first_wall = 0;
     (*maze)->line_with_last_wall = 0;
     (*maze)->spare_cols = SIZE_MAX;
-
-    (*maze)->fst_ent = NULL;
-    (*maze)->snd_ent = NULL;
-    (*maze)->starting_wall = NULL;
 }
 
 bool check_arguments(int argc, char* argv[], bool* with_solve)
@@ -114,11 +110,11 @@ bool check(matrix_t* matrix, maze_t* maze)
         return false;
     }
 
-    maze->lowest_x = maze->starting_wall->x;
-    maze->highest_x = maze->starting_wall->x;
+    maze->lowest_x = maze->starting_wall.x;
+    maze->highest_x = maze->starting_wall.x;
     maze->highest_y = 0;
 
-    if (!check_outside(move(*(maze->starting_wall), EAST), EAST, maze, matrix))
+    if (!check_outside(move(maze->starting_wall, EAST), EAST, maze, matrix))
     {
         maze_destroy(maze); maze = NULL;
         matrix_destroy(matrix); matrix = NULL;
@@ -129,14 +125,14 @@ bool check(matrix_t* matrix, maze_t* maze)
 
 bool solve(char* path, matrix_t* matrix, maze_t* maze)
 {
-    position_t start = move(*(maze->fst_ent), maze->solve_start_dir);
+    position_t start = move(maze->fst_ent, maze->solve_start_dir);
     if (!solve_maze(maze, matrix, start))
     {
         maze_destroy(maze); maze = NULL;
         matrix_destroy(matrix); matrix = NULL;
         return false;
     }
-    m_get(matrix, maze->fst_ent->y, maze->fst_ent->x)->symbol = PATH;
+    m_get(matrix, maze->fst_ent.y, maze->fst_ent.x)->symbol = PATH;
     m_get(matrix, start.y, start.x)->symbol = PATH;
 
     FILE* output = fopen(path, "w");

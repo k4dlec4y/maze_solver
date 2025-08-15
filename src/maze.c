@@ -217,16 +217,8 @@ void full_matrix_print(matrix_t *matrix)
 
 void maze_destroy(maze_t *maze)
 {
-    if (maze->fst_ent)
-        free(maze->fst_ent);
-    maze->fst_ent = NULL;
-    if (maze->snd_ent)
-        free(maze->snd_ent);
-    maze->snd_ent = NULL;
-    if (maze->starting_wall)
-        free(maze->starting_wall);
-    maze->starting_wall = NULL;
-    free(maze); maze = NULL;
+    free(maze);
+    maze = NULL;
 }
 
 void matrix_destroy(matrix_t *matrix)

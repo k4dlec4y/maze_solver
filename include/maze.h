@@ -43,9 +43,9 @@ struct maze {
     size_t spare_cols;
 
     /* first entrance + dir is where BFS starts */
-    position_t *fst_ent;
+    position_t fst_ent;
     dir_t solve_start_dir;
-    position_t *snd_ent;
+    position_t snd_ent;
 
     /*
      * first wall encountered when loading the file
@@ -54,7 +54,7 @@ struct maze {
      * on the left -> there must be a wall to the right of it -> this gives us
      * the direction we should take when looking for the fence
      */
-    position_t *starting_wall;
+    position_t starting_wall;
 
     /*
      * the following extrema are used to check, if there are other independent
@@ -154,12 +154,12 @@ void matrix_to_file(matrix_t *matrix, FILE *file);
 void full_matrix_print(matrix_t *matrix);
 
 /*
- * Cleans internal fields.
+ * Frees internal fields and maze_t.
  */
 void maze_destroy(maze_t *maze);
 
 /*
- * Cleans internal fields.
+ * Frees internal fields and matrix_t.
  */
 void matrix_destroy(matrix_t *matrix);
 

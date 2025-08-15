@@ -12,25 +12,13 @@ static bool maze_add_entrance(maze_t* maze, position_t pos, dir_t d)
 {
     if (maze->entrance_count == 0)
     {
-        maze->fst_ent = malloc(sizeof(position_t));
-        if (maze->fst_ent == NULL)
-        {
-            perror("couldn't allocate memory for fst_ent\n");
-            return false;
-        }
-        *(maze->fst_ent) = pos;
+        maze->fst_ent = pos;
         maze->solve_start_dir = turn_right(d);
         maze->entrance_count++;
     }
     else if (maze->entrance_count == 1)
     {
-        maze->snd_ent = malloc(sizeof(position_t));
-        if (maze->snd_ent == NULL)
-        {
-            perror("couldn't allocate memory for snd_ent\n");
-            return false;
-        }
-        *(maze->snd_ent) = pos;
+        maze->snd_ent = pos;
         maze->entrance_count++;
     }
     return true;
@@ -113,7 +101,7 @@ static bool restrict_matrix_aux(position_t pos, dir_t d, maze_t *maze, matrix_t*
 {
     if (is_fence(matrix, pos))
     {
-        if (!pos_is_equal(pos, *(maze->starting_wall)))
+        if (!pos_is_equal(pos, maze->starting_wall))
         {
             fprintf(stderr, "same edge but not the end, x %d, y %d\n", pos.x, pos.y);
             return false;
@@ -163,15 +151,9 @@ bool restrict_matrix(maze_t *maze, matrix_t* matrix)
         fprintf(stderr, "dead end, x %d, y %zu\n", 0, i);
         return false;
     }
-    maze->starting_wall = malloc(sizeof(position_t));
-    if (maze->starting_wall == NULL)
-    {
-        perror("couldn't allocate memory\n");
-        return false;
-    }
-    *(maze->starting_wall) = (position_t){.x=i, .y=0};
+    maze->starting_wall = (position_t){.x=i, .y=0};
     maze->entrance_count = 0;
-    return restrict_matrix_aux(*(maze->starting_wall), EAST, maze, matrix);
+    return restrict_matrix_aux(maze->starting_wall, EAST, maze, matrix);
 }
 
 /** checks if the maze is "extended" through the entire matrix **/
@@ -222,7 +204,7 @@ bool check_line(position_t pos, dir_t d, matrix_t* matrix)
 
 bool check_outside(position_t pos, dir_t d, maze_t *maze, matrix_t* matrix)
 {
-    if (pos_is_equal(pos, *(maze->starting_wall)))
+    if (pos_is_equal(pos, maze->starting_wall))
     {
         if (!check_low_high(matrix, maze))
         {

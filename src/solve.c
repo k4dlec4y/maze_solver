@@ -59,7 +59,7 @@ bool solve_maze(maze_t *maze, matrix_t* matrix, position_t start)
     vertexes[0] = (vertex){.pos=start, .d=maze->solve_start_dir, .prev=0, .index=0};
 
     queue_insert(bfs_queue, (node_t){NULL, 0});
-    set_found(matrix, *(maze->fst_ent));
+    set_found(matrix, maze->fst_ent);
 
     while (!queue_is_empty(bfs_queue))
     {
@@ -67,7 +67,7 @@ bool solve_maze(maze_t *maze, matrix_t* matrix, position_t start)
         position_t pos = vertexes[index].pos;
         dir_t d = vertexes[index].d;
 
-        if (pos_is_equal(pos, *(maze->snd_ent)))
+        if (pos_is_equal(pos, maze->snd_ent))
         {
             set_path(vertexes, matrix, index);
             free_resources_solve(bfs_queue, vertexes);
