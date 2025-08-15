@@ -21,19 +21,19 @@ static void set_path(vertex* vertexes, matrix_t* matrix, size_t i)
     }
 }
 
-static void set_neighbours(dir* dirs, position_t* neigs, tile_t* tiles, dir d, position_t* pos, matrix_t* matrix)
+static void set_neighbours(dir_t* dirs, position_t* neigs, tile_t* tiles, dir_t d, position_t* pos, matrix_t* matrix)
 {
     *dirs = turn_left(d);
     *(dirs + 1) = d;
     *(dirs + 2) = turn_right(d);
 
-    *neigs = add_dir(*pos, turn_left(d));
-    *(neigs + 1) = add_dir(*pos, d);
-    *(neigs + 2) = add_dir(*pos, turn_right(d));
+    *neigs = move(*pos, turn_left(d));
+    *(neigs + 1) = move(*pos, d);
+    *(neigs + 2) = move(*pos, turn_right(d));
 
-    *tiles = get_tile(neigs[0], matrix);
-    *(tiles + 1) = get_tile(neigs[1], matrix);
-    *(tiles + 2) = get_tile(neigs[2], matrix);
+    *tiles = get_tile(matrix, neigs[0]);
+    *(tiles + 1) = get_tile(matrix, neigs[1]);
+    *(tiles + 2) = get_tile(matrix, neigs[2]);
 }
 
 bool solve_maze(maze_t *maze, matrix_t* matrix, position_t start)
@@ -56,31 +56,31 @@ bool solve_maze(maze_t *maze, matrix_t* matrix, position_t start)
         return false;
     }
 
-    vertexes[0] = (vertex){.pos=start, .d=maze->slv_start, .prev=0, .index=0};
+    vertexes[0] = (vertex){.pos=start, .d=maze->solve_start_dir, .prev=0, .index=0};
 
     queue_insert(bfs_queue, (node_t){NULL, 0});
-    set_found(*(maze->fst_ent), matrix);
+    set_found(matrix, *(maze->fst_ent));
 
     while (!queue_is_empty(bfs_queue))
     {
         size_t index = queue_pop(bfs_queue).index;
         position_t pos = vertexes[index].pos;
-        dir d = vertexes[index].d;
+        dir_t d = vertexes[index].d;
 
-        if (eq_pos(pos, *(maze->snd_ent)))
+        if (pos_is_equal(pos, *(maze->snd_ent)))
         {
             set_path(vertexes, matrix, index);
             free_resources_solve(bfs_queue, vertexes);
             return true;
         }
-        set_found(pos, matrix);
+        set_found(matrix, pos);
 
-        dir dirs[3]; position_t neigs[3]; tile_t tiles[3];
+        dir_t dirs[3]; position_t neigs[3]; tile_t tiles[3];
         set_neighbours(dirs, neigs, tiles, d, &pos, matrix);
 
         for (int i = 0; i < 3; i++)
         {
-            if (get_found(neigs[i], matrix))
+            if (is_found(matrix, neigs[i]))
             {
                 continue;
             }

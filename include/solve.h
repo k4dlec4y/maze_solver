@@ -3,7 +3,7 @@
 typedef
 struct vertex{
     position_t pos;
-    dir d; // direction where vertex heads
+    dir_t d; // direction where vertex heads
 
     size_t prev; // index used to go back from snd_ent to fst_ent
     size_t index;

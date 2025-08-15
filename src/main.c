@@ -58,7 +58,7 @@ bool creating_the_maze(char* path, maze_t** maze, char** char_pointer)
 
     set_maze(maze);
 
-    *char_pointer = (char*)malloc(50 * sizeof(char));
+    *char_pointer = (char*)malloc(64 * sizeof(char));
     if (char_pointer == NULL)
     {
         perror("couldn't allocate memory\n");
@@ -88,10 +88,10 @@ bool creating_the_matrix(matrix_t* matrix, maze_t* maze, char* char_pointer)
         return false;
     }
 
-    matrix->m_cols = maze->line_length + 1 - maze->spare_cols; // + 1 adding space for \n
-    matrix->m_rows = maze->line_with_last_wall - maze->line_with_first_wall;
-    matrix->m = malloc(sizeof(tile_t) * matrix->m_cols * matrix->m_rows);
-    if (matrix->m == NULL)
+    matrix->cols = maze->line_length + 1 - maze->spare_cols; // + 1 adding space for \n
+    matrix->rows = maze->line_with_last_wall - maze->line_with_first_wall;
+    matrix->array = malloc(sizeof(tile_t) * matrix->cols * matrix->rows);
+    if (matrix->array == NULL)
     {
         perror("couldn't allocate memory\n");
         maze_destroy(maze); maze = NULL;
@@ -100,7 +100,7 @@ bool creating_the_matrix(matrix_t* matrix, maze_t* maze, char* char_pointer)
         return false;
     }
 
-    fill_maze_matrix(char_pointer, maze, matrix);
+    fill_maze_matrix(maze, matrix, char_pointer);
     free(char_pointer); char_pointer = NULL;
     return true;
 }
@@ -118,7 +118,7 @@ bool check(matrix_t* matrix, maze_t* maze)
     maze->highest_x = maze->starting_wall->x;
     maze->highest_y = 0;
 
-    if (!check_outside(add_dir(*(maze->starting_wall), EAST), EAST, maze, matrix))
+    if (!check_outside(move(*(maze->starting_wall), EAST), EAST, maze, matrix))
     {
         maze_destroy(maze); maze = NULL;
         matrix_destroy(matrix); matrix = NULL;
@@ -129,7 +129,7 @@ bool check(matrix_t* matrix, maze_t* maze)
 
 bool solve(char* path, matrix_t* matrix, maze_t* maze)
 {
-    position_t start = add_dir(*(maze->fst_ent), maze->slv_start);
+    position_t start = move(*(maze->fst_ent), maze->solve_start_dir);
     if (!solve_maze(maze, matrix, start))
     {
         maze_destroy(maze); maze = NULL;
@@ -147,7 +147,7 @@ bool solve(char* path, matrix_t* matrix, maze_t* maze)
         matrix_destroy(matrix); matrix = NULL;
         return false;
     }
-    matrix_to_file(output, matrix);
+    matrix_to_file(matrix, output);
     
     fclose(output); output = NULL;
     return true;

@@ -8,9 +8,9 @@
  * used by restrict_maze
  * returns true on success
 **/
-static bool maze_add_entrance(maze_t* maze, position_t pos, dir d)
+static bool maze_add_entrance(maze_t* maze, position_t pos, dir_t d)
 {
-    if (maze->entrances == 0)
+    if (maze->entrance_count == 0)
     {
         maze->fst_ent = malloc(sizeof(position_t));
         if (maze->fst_ent == NULL)
@@ -19,10 +19,10 @@ static bool maze_add_entrance(maze_t* maze, position_t pos, dir d)
             return false;
         }
         *(maze->fst_ent) = pos;
-        maze->slv_start = turn_right(d);
-        maze->entrances++;
+        maze->solve_start_dir = turn_right(d);
+        maze->entrance_count++;
     }
-    else if (maze->entrances == 1)
+    else if (maze->entrance_count == 1)
     {
         maze->snd_ent = malloc(sizeof(position_t));
         if (maze->snd_ent == NULL)
@@ -31,7 +31,7 @@ static bool maze_add_entrance(maze_t* maze, position_t pos, dir d)
             return false;
         }
         *(maze->snd_ent) = pos;
-        maze->entrances++;
+        maze->entrance_count++;
     }
     return true;
 }
@@ -40,28 +40,28 @@ static bool maze_add_entrance(maze_t* maze, position_t pos, dir d)
  * used by restrict_maze
  * returns true on success
 **/
-static bool check_entrance(matrix_t* matrix, position_t pos, dir d)
+static bool check_entrance(matrix_t* matrix, position_t pos, dir_t d)
 {
-    position_t forward = add_dir(pos, d);
-    if (!maze_is_within_bounds(matrix, forward) || get_tile(forward, matrix).symbol != WALL)
+    position_t forward = move(pos, d);
+    if (!position_is_valid(matrix, forward) || get_tile(matrix, forward).symbol != WALL)
     {
         perror("no # line going through X");
         return false;
     }
-    position_t left = add_dir(pos, turn_left(d));
-    if (maze_is_within_bounds(matrix, left))
+    position_t left = move(pos, turn_left(d));
+    if (position_is_valid(matrix, left))
     {
-        char left_c = get_tile(left, matrix).symbol;
+        char left_c = get_tile(matrix, left).symbol;
         if (left_c == WALL || left_c == ENTRANCE)
         {
             fprintf(stderr, "no whitespace around X on left, x %d, y %d, c %d\n", pos.x, pos.y, left_c);
             return false;
         }
     }
-    position_t right = add_dir(pos, turn_right(d));
-    if (maze_is_within_bounds(matrix, right))
+    position_t right = move(pos, turn_right(d));
+    if (position_is_valid(matrix, right))
     {
-        char right_c = get_tile(right, matrix).symbol;
+        char right_c = get_tile(matrix, right).symbol;
         if (right_c == WALL || right_c == '\n')
         {
             fprintf(stderr, "no whitespace around X on right, x %d, y %d, c %d\n", pos.x, pos.y, right_c);
@@ -72,12 +72,12 @@ static bool check_entrance(matrix_t* matrix, position_t pos, dir d)
 }
 
 /** returns direction of next wall while restricting the maze **/
-static dir next_dir(position_t *pos, dir d, matrix_t* matrix)
+static dir_t next_dir(position_t *pos, dir_t d, matrix_t* matrix)
 {
-    position_t left = add_dir(*pos, turn_left(d));
-    if (maze_is_within_bounds(matrix, left))
+    position_t left = move(*pos, turn_left(d));
+    if (position_is_valid(matrix, left))
     {
-        char left_c = get_tile(left, matrix).symbol;
+        char left_c = get_tile(matrix, left).symbol;
         if (left_c == WALL || left_c == ENTRANCE)
         {
             *pos = left;
@@ -85,10 +85,10 @@ static dir next_dir(position_t *pos, dir d, matrix_t* matrix)
         }
     }
 
-    position_t forward = add_dir(*pos, d);
-    if (maze_is_within_bounds(matrix, forward))
+    position_t forward = move(*pos, d);
+    if (position_is_valid(matrix, forward))
     {
-        char forward_c = get_tile(forward, matrix).symbol;
+        char forward_c = get_tile(matrix, forward).symbol;
         if (forward_c == WALL || forward_c == ENTRANCE)
         {
             *pos = forward;
@@ -96,46 +96,46 @@ static dir next_dir(position_t *pos, dir d, matrix_t* matrix)
         }
     }
 
-    position_t right = add_dir(*pos, turn_right(d));
-    if (maze_is_within_bounds(matrix, right))
+    position_t right = move(*pos, turn_right(d));
+    if (position_is_valid(matrix, right))
     {
-        char right_c = get_tile(right, matrix).symbol;
+        char right_c = get_tile(matrix, right).symbol;
         if (right_c == WALL || right_c == ENTRANCE)
         {
             *pos = right;
             return turn_right(d);
         }
     }
-    return INVALID;
+    return INVALID_DIRECTION;
 }
 
-static bool restrict_matrix_aux(position_t pos, dir d, maze_t *maze, matrix_t* matrix)
+static bool restrict_matrix_aux(position_t pos, dir_t d, maze_t *maze, matrix_t* matrix)
 {
-    if (tile_is_edge(pos, matrix))
+    if (is_fence(matrix, pos))
     {
-        if (!eq_pos(pos, *(maze->starting_wall)))
+        if (!pos_is_equal(pos, *(maze->starting_wall)))
         {
             fprintf(stderr, "same edge but not the end, x %d, y %d\n", pos.x, pos.y);
             return false;
         }
-        if (maze->entrances != 2)
+        if (maze->entrance_count != 2)
         {
             perror("entrances are not on edge\n");
             return false;
         }
         return true;
     }
-    set_tile_as_edge(pos, matrix);
+    set_fence(matrix, pos);
 
-    if (get_tile(pos, matrix).symbol == ENTRANCE)
+    if (get_tile(matrix, pos).symbol == ENTRANCE)
     {
         if (!maze_add_entrance(maze, pos, d) || !check_entrance(matrix, pos, d))
         {
             return false;
         }
     }
-    dir next = next_dir(&pos, d,matrix);
-    if (next == INVALID)
+    dir_t next = next_dir(&pos, d,matrix);
+    if (next == INVALID_DIRECTION)
     {
         fprintf(stderr, "dead end, x %d, y %d\n", pos.x, pos.y);
         return false;
@@ -155,7 +155,7 @@ bool restrict_matrix(maze_t *maze, matrix_t* matrix)
         perror("unexcepted char\n");
         return false;
     }
-    if (!maze_is_within_bounds(matrix, (position_t){0, i +1}) ||
+    if (!position_is_valid(matrix, (position_t){0, i +1}) ||
         (m_get(matrix, 0, i + 1)->symbol != ENTRANCE &&
          m_get(matrix, 0, i + 1)->symbol != WALL)
        )
@@ -170,7 +170,7 @@ bool restrict_matrix(maze_t *maze, matrix_t* matrix)
         return false;
     }
     *(maze->starting_wall) = (position_t){.x=i, .y=0};
-    maze->entrances = 0;
+    maze->entrance_count = 0;
     return restrict_matrix_aux(*(maze->starting_wall), EAST, maze, matrix);
 }
 
@@ -179,29 +179,29 @@ static bool check_low_high(matrix_t *matrix, maze_t *maze)
 {
     // maze->line_length - 2 because the last char in matrix line is always \n
     return maze->lowest_x == 0 &&
-           maze->highest_x == matrix->m_cols - 2 &&
-           maze->highest_y == matrix->m_rows - 1;
+           maze->highest_x == matrix->cols - 2 &&
+           maze->highest_y == matrix->rows - 1;
 }
 
-bool check_line(position_t pos, dir d, matrix_t* matrix)
+bool check_line(position_t pos, dir_t d, matrix_t* matrix)
 {
-    if (!maze_is_within_bounds(matrix, pos))
+    if (!position_is_valid(matrix, pos))
     {
         return true;
     }
-    tile_t cur_tile = get_tile(pos, matrix);
-    while (!cur_tile.is_edge)
+    tile_t cur_tile = get_tile(matrix, pos);
+    while (!cur_tile.is_fence)
     {
         if (cur_tile.symbol == WALL)
         {
             return false;
         }
-        pos = add_dir(pos, d);
-        if (!maze_is_within_bounds(matrix, pos))
+        pos = move(pos, d);
+        if (!position_is_valid(matrix, pos))
         {
             return true;
         }
-        cur_tile = get_tile(pos, matrix);
+        cur_tile = get_tile(matrix, pos);
     }
     return true;
 }
@@ -220,9 +220,9 @@ bool check_line(position_t pos, dir d, matrix_t* matrix)
  * will find 2 and without knowing that 2 is part of the fence it would return false
 **/
 
-bool check_outside(position_t pos, dir d, maze_t *maze, matrix_t* matrix)
+bool check_outside(position_t pos, dir_t d, maze_t *maze, matrix_t* matrix)
 {
-    if (eq_pos(pos, *(maze->starting_wall)))
+    if (pos_is_equal(pos, *(maze->starting_wall)))
     {
         if (!check_low_high(matrix, maze))
         {
@@ -232,14 +232,14 @@ bool check_outside(position_t pos, dir d, maze_t *maze, matrix_t* matrix)
         return true;
     }
 
-    if (!check_line(add_dir(pos, turn_left(d)), turn_left(d), matrix))
+    if (!check_line(move(pos, turn_left(d)), turn_left(d), matrix))
     {
         perror("2 or more components within their coordinates\n");
         return false;
     }
 
-    dir next = next_dir(&pos, d, matrix);
-    if (next == INVALID)
+    dir_t next = next_dir(&pos, d, matrix);
+    if (next == INVALID_DIRECTION)
     {
         fprintf(stderr, "dead end, x %d, y %d\n", pos.x, pos.y);
         return false;

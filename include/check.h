@@ -5,7 +5,7 @@
 
 #include "maze.h"
 
-/** creates the longest path around the maze by assigning .is_edge,
+/** creates the longest path around the maze by assigning .is_fence,
  * also checks if the entrances are correct
  * returns true on success, false on failure
 **/
@@ -15,9 +15,9 @@ bool restrict_matrix(maze_t *maze, matrix_t* matrix);
  * used by check_outside
  * returns false if there is # out of the maze*
 **/
-bool check_line(position_t pos, dir d, matrix_t* matrix);
+bool check_line(position_t pos, dir_t d, matrix_t* matrix);
 
 /** checks if there are any walls outside of the maze 
  * returns false if there is # out of the maze*
 **/
-bool check_outside(position_t pos, dir d, maze_t *maze, matrix_t* matrix);
+bool check_outside(position_t pos, dir_t d, maze_t *maze, matrix_t* matrix);
