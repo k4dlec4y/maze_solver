@@ -4,7 +4,7 @@
 #define WALL '#'
 #define ENTRANCE 'X'
 
-void maze_add_entrance(maze_t *maze, position_t p, dir_t d)
+static void maze_add_entrance(maze_t *maze, position_t p, dir_t d)
 {
     if (maze->entrance_count == 0) {
         maze->fst_ent = p;
