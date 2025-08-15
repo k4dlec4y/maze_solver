@@ -110,7 +110,7 @@ bool load_file(maze_t *maze, FILE *file, char **char_p)
     int ch;
     while ((ch = fgetc(file)) != EOF) {
 
-        if (chars_loaded + 5 >= bytes_allocated) {
+        if (chars_loaded + 1 >= bytes_allocated) {
             bytes_allocated *= 2;
             char *temp_p = realloc(*char_p, bytes_allocated * sizeof(char));
             if (temp_p == NULL) {
