@@ -5,7 +5,7 @@
 #define ENTRANCE 'X'
 #define PATH 'o'
 
-static void free_resources_solve(queue* bfs_queue, vertex* vertexes)
+static void free_resources_solve(queue_t* bfs_queue, vertex* vertexes)
 {
     queue_free(bfs_queue);
     free(bfs_queue); bfs_queue = NULL;
@@ -38,7 +38,7 @@ static void set_neighbours(dir* dirs, position_t* neigs, tile_t* tiles, dir d, p
 
 bool solve_maze(maze_t *maze, matrix_t* matrix, position_t start)
 {
-    queue* bfs_queue = malloc(sizeof(queue));
+    queue_t* bfs_queue = malloc(sizeof(queue_t));
     if (bfs_queue == NULL)
     {
         perror("couldn't allocate memory for queue\n");
@@ -58,7 +58,7 @@ bool solve_maze(maze_t *maze, matrix_t* matrix, position_t start)
 
     vertexes[0] = (vertex){.pos=start, .d=maze->slv_start, .prev=0, .index=0};
 
-    queue_insert(bfs_queue, (node){NULL, 0});
+    queue_insert(bfs_queue, (node_t){NULL, 0});
     set_found(*(maze->fst_ent), matrix);
 
     while (!queue_is_empty(bfs_queue))
@@ -100,7 +100,7 @@ bool solve_maze(maze_t *maze, matrix_t* matrix, position_t start)
                     vertexes = temp;
                 }
                 vertexes[n] = (vertex){.pos=neigs[i], .d=dirs[i], .prev=index, .index=n};
-                queue_insert(bfs_queue, (node){NULL, n});
+                queue_insert(bfs_queue, (node_t){NULL, n});
             }
         }
     }
