@@ -7,8 +7,6 @@
 #include "check.h"
 #include "solve.h"
 
-#define PATH 'o'
-
 void set_maze(maze_t** maze)
 {
     (*maze)->line_length = 0;
@@ -109,8 +107,6 @@ bool solve(char* path, matrix_t* matrix, maze_t* maze)
         matrix_destroy(matrix); matrix = NULL;
         return false;
     }
-    m_get(matrix, maze->fst_ent.y, maze->fst_ent.x)->symbol = PATH;
-    m_get(matrix, start.y, start.x)->symbol = PATH;
 
     FILE* output = fopen(path, "w");
     if (output == NULL)

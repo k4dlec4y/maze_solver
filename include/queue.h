@@ -3,13 +3,14 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 typedef struct node node_t;
 struct node {
     /* used for freeing */
     node_t *next;
     /* index of node's vertex in vertices array */
-    size_t index;
+    ssize_t index;
 };
 
 typedef

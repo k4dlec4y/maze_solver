@@ -1,110 +1,125 @@
 #include "solve.h"
 #include "queue.h"
+#include <stdio.h>
 
 #define SPACE ' '
 #define ENTRANCE 'X'
 #define PATH 'o'
 
-static void free_resources_solve(queue_t* bfs_queue, vertex* vertexes)
+static bool allocate_resources(queue_t **bfs_queue, vertex_t **vertices,
+    ssize_t vertices_size)
 {
-    queue_free(bfs_queue);
-    free(bfs_queue); bfs_queue = NULL;
-    free(vertexes); vertexes = NULL;
-}
-
-static void set_path(vertex* vertexes, matrix_t* matrix, size_t i)
-{
-    while (vertexes[i].index != 0)
-    {
-        m_get(matrix, vertexes[i].pos.y, vertexes[i].pos.x)->symbol = PATH;
-        i = vertexes[i].prev;
-    }
-}
-
-static void set_neighbours(dir_t* dirs, position_t* neigs, tile_t* tiles, dir_t d, position_t* pos, matrix_t* matrix)
-{
-    *dirs = turn_left(d);
-    *(dirs + 1) = d;
-    *(dirs + 2) = turn_right(d);
-
-    *neigs = move(*pos, turn_left(d));
-    *(neigs + 1) = move(*pos, d);
-    *(neigs + 2) = move(*pos, turn_right(d));
-
-    *tiles = get_tile(matrix, neigs[0]);
-    *(tiles + 1) = get_tile(matrix, neigs[1]);
-    *(tiles + 2) = get_tile(matrix, neigs[2]);
-}
-
-bool solve_maze(maze_t *maze, matrix_t* matrix, position_t start)
-{
-    queue_t* bfs_queue = malloc(sizeof(queue_t));
-    if (bfs_queue == NULL)
-    {
+    *bfs_queue = malloc(sizeof(queue_t));
+    if (*bfs_queue == NULL) {
         perror("couldn't allocate memory for queue\n");
         return false;
     }
-    queue_init(bfs_queue);
+    queue_init(*bfs_queue);
 
-    size_t n = 0;
-    size_t space_for_vertexes = 50;
-    vertex* vertexes = malloc(sizeof(vertex) * 50);
-    if (vertexes == NULL)
-    {
-        perror("couldn't allocate memory for vertexes\n");
-        free(bfs_queue);
+    *vertices = malloc(sizeof(vertex_t) * vertices_size);
+    if (*vertices == NULL) {
+        perror("couldn't allocate memory for vertices\n");
+        free(*bfs_queue);
         return false;
     }
+    return true;
+}
 
-    vertexes[0] = (vertex){.pos=start, .d=maze->solve_start_dir, .prev=0, .index=0};
+static void free_resources(queue_t *bfs_queue, vertex_t *vertices)
+{
+    queue_free(bfs_queue);
+    free(bfs_queue); bfs_queue = NULL;
+    free(vertices); vertices = NULL;
+}
 
-    queue_insert(bfs_queue, (node_t){NULL, 0});
+static bool vertices_realloc(vertex_t **vertices, ssize_t *size, ssize_t n)
+{
+    if (n < *size)
+        return true;
+
+    *size *= 2;
+    vertex_t *temp = realloc(*vertices, *size * sizeof(vertex_t));
+    if (temp == NULL) {
+        perror("couldn't allocate memory for vertices\n");
+        return false;
+    }
+    *vertices = temp;
+    return true;
+}
+
+static void fill_in_path(vertex_t *vertices, matrix_t *matrix, ssize_t i,
+    position_t fst_ent)
+{
+    /* start has parent_index = -1 */
+    while (i > -1) {
+        vertex_t vertex = vertices[i];
+        m_get(matrix, vertex.position.y, vertex.position.x)->symbol = PATH;
+        i = vertex.parent_index;
+    }
+    m_get(matrix, fst_ent.y, fst_ent.x)->symbol = PATH;
+}
+
+static void set_neighbours(matrix_t *matrix, position_t *p, dir_t d,
+    tile_t *tiles, position_t *neigs, dir_t *dirs)
+{
+    dirs[0] = turn_left(d);
+    dirs[1] = d;
+    dirs[2] = turn_right(d);
+
+    neigs[0] = move(*p, dirs[0]);
+    neigs[1] = move(*p, dirs[1]);
+    neigs[2] = move(*p, dirs[2]);
+
+    tiles[0] = get_tile(matrix, neigs[0]);
+    tiles[1] = get_tile(matrix, neigs[1]);
+    tiles[2] = get_tile(matrix, neigs[2]);
+}
+
+bool solve_maze(maze_t *maze, matrix_t *matrix, position_t start)
+{
+    queue_t *bfs_queue;
+    vertex_t *vertices;
+    ssize_t vertices_size = 64;
+    if (!allocate_resources(&bfs_queue, &vertices, vertices_size))
+        return false;
+
+    ssize_t n = 0;
     set_found(matrix, maze->fst_ent);
+    vertices[n] = (vertex_t){start, maze->solve_start_dir, -1, n};
+    queue_insert(bfs_queue, (node_t){NULL, n});
+    ++n;
 
-    while (!queue_is_empty(bfs_queue))
-    {
-        size_t index = queue_pop(bfs_queue).index;
-        position_t pos = vertexes[index].pos;
-        dir_t d = vertexes[index].d;
+    while (!queue_is_empty(bfs_queue)) {
+        ssize_t index = queue_pop(bfs_queue).index;
+        position_t p = vertices[index].position;
+        dir_t d = vertices[index].direction;
 
-        if (pos_is_equal(pos, maze->snd_ent))
-        {
-            set_path(vertexes, matrix, index);
-            free_resources_solve(bfs_queue, vertexes);
+        if (pos_is_equal(p, maze->snd_ent)) {
+            fill_in_path(vertices, matrix, index, maze->fst_ent);
+            free_resources(bfs_queue, vertices);
             return true;
         }
-        set_found(matrix, pos);
 
         dir_t dirs[3]; position_t neigs[3]; tile_t tiles[3];
-        set_neighbours(dirs, neigs, tiles, d, &pos, matrix);
-
-        for (int i = 0; i < 3; i++)
-        {
+        set_neighbours(matrix, &p, d, tiles, neigs, dirs);
+        for (int i = 0; i < 3; i++) {
             if (is_found(matrix, neigs[i]))
-            {
                 continue;
-            }
-            if (tiles[i].symbol == SPACE || tiles[i].symbol == ENTRANCE)
-            {
-                n++;
-                if (n >= space_for_vertexes)
-                {
-                    space_for_vertexes += 50;
-                    vertex* temp = (vertex*)realloc(vertexes, space_for_vertexes * sizeof(vertex));
-                    if (temp == NULL)
-                    {
-                        perror("couldn't allocate memory for vertexes\n");
-                        free_resources_solve(bfs_queue, vertexes);
-                        return false;
-                    }
-                    vertexes = temp;
+
+            char box = tiles[i].symbol;
+            if (box == SPACE || box == ENTRANCE) {
+                if (!vertices_realloc(&vertices, &vertices_size, n)) {
+                    free_resources(bfs_queue, vertices);
+                    return false;
                 }
-                vertexes[n] = (vertex){.pos=neigs[i], .d=dirs[i], .prev=index, .index=n};
+                set_found(matrix, neigs[i]);
+                vertices[n] = (vertex_t){neigs[i], dirs[i], index, n};
                 queue_insert(bfs_queue, (node_t){NULL, n});
+                ++n;
             }
         }
     }
-    perror("no path found\n");
-    free_resources_solve(bfs_queue, vertexes);
+    perror("no path was found\n");
+    free_resources(bfs_queue, vertices);
     return false;
 }
