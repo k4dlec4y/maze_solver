@@ -13,14 +13,14 @@ static bool allocate_resources(queue_t **bfs_queue, vertex_t **vertices,
 {
     *bfs_queue = malloc(sizeof(queue_t));
     if (*bfs_queue == NULL) {
-        perror("couldn't allocate memory for queue\n");
+        fputs("couldn't allocate memory for queue\n", stderr);
         return false;
     }
     queue_init(*bfs_queue);
 
     *vertices = malloc(sizeof(vertex_t) * vertices_size);
     if (*vertices == NULL) {
-        perror("couldn't allocate memory for vertices\n");
+        fputs("couldn't allocate memory for vertices\n", stderr);
         free(*bfs_queue);
         return false;
     }
@@ -42,7 +42,7 @@ static bool vertices_realloc(vertex_t **vertices, ssize_t *size, ssize_t n)
     *size *= 2;
     vertex_t *temp = realloc(*vertices, *size * sizeof(vertex_t));
     if (temp == NULL) {
-        perror("couldn't allocate memory for vertices\n");
+        fputs("couldn't allocate memory for vertices\n", stderr);
         return false;
     }
     *vertices = temp;
@@ -121,7 +121,7 @@ bool solve_maze(maze_t *maze, matrix_t *matrix, position_t start)
             }
         }
     }
-    perror("no path was found\n");
+    fputs("no path was found\n", stderr);
     free_resources(bfs_queue, vertices);
     return false;
 }

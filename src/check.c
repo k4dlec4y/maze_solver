@@ -27,7 +27,7 @@ static bool check_entrance(matrix_t *matrix, position_t p, dir_t d)
     position_t forward = move(p, d);
     if (!position_is_valid(matrix, forward) ||
         get_tile(matrix, forward).symbol != WALL) {
-        perror("no straight wall (#X#) is passing through X");
+        fputs("no straight wall (#X#) is passing through X\n", stderr);
         return false;
     }
     position_t left = move(p, turn_left(d));
@@ -100,7 +100,7 @@ static bool mark_fence_aux(maze_t *maze, matrix_t *matrix,
             return false;
         }
         if (maze->entrance_count != 2) {
-            perror("at least one entrance was not placed in the fence\n");
+            fputs("at least one entrance was not placed in the fence\n", stderr);
             return false;
         }
         return true;
@@ -190,7 +190,7 @@ bool check_outside(maze_t *maze, matrix_t *matrix, position_t p, dir_t d)
 {
     if (pos_is_equal(p, maze->starting_wall)) {
         if (!check_low_high(maze, matrix)) {
-            perror("other maze exists which can't be found by marching\n");
+            fputs("other maze exists which can't be found by marching\n", stderr);
             return false;
         }
         return true;
@@ -198,13 +198,13 @@ bool check_outside(maze_t *maze, matrix_t *matrix, position_t p, dir_t d)
 
     dir_t away_from_fence = turn_left(d);
     if (!check_line(matrix, move(p, away_from_fence), away_from_fence)) {
-        perror("other maze was found while marching away from the fence\n");
+        fputs("other maze was found while marching away from fence\n", stderr);
         return false;
     }
     dir_t next = next_dir(matrix, &p, d);
     if (next == INVALID_DIRECTION) {
-        perror("dead end was reached while checking outside, "
-               "(this should not happen at all)\n");
+        fputs("dead end was reached while checking outside, "
+               "(this should not happen at all)\n", stderr);
         return false;
     }
     maze->lowest_x = min(maze->lowest_x, p.x);

@@ -29,7 +29,7 @@ static bool check_arguments(int argc, const char *mode, bool *with_solve)
         *with_solve = true;
         return true;
     }
-    perror("invalid parameters\n");
+    fputs("invalid parameters\n", stderr);
     return false;
 }
 
@@ -41,12 +41,12 @@ static bool maze_create(char *path, maze_t **maze, char **char_pointer)
 
     FILE *program = fopen(path, "r");
     if (program == NULL) {
-        perror("couldn't load the source file\n");
+        perror("couldn't load the source file");
         return false;
     }
     *maze = malloc(sizeof(maze_t));
     if (*maze == NULL) {
-        perror("couldn't allocate memory\n");
+        fputs("couldn't allocate memory\n", stderr);
         fclose(program); program = NULL;
         return false;
     }
@@ -58,7 +58,7 @@ static bool maze_create(char *path, maze_t **maze, char **char_pointer)
      */
     *char_pointer = malloc(64 * sizeof(char));
     if (*char_pointer == NULL) {
-        perror("couldn't allocate memory\n");
+        fputs("couldn't allocate memory\n", stderr);
         maze_destroy(*maze); *maze = NULL;
         fclose(program); program = NULL;
         return false;
@@ -80,7 +80,7 @@ static bool matrix_create(maze_t *maze, matrix_t *matrix, char *char_pointer)
     assert(char_pointer != NULL);
 
     if (matrix == NULL) {
-        perror("couldn't allocate memory\n");
+        fputs("couldn't allocate memory\n", stderr);
         maze_destroy(maze); maze = NULL;
         free(char_pointer); char_pointer = NULL;
         return false;
@@ -90,7 +90,7 @@ static bool matrix_create(maze_t *maze, matrix_t *matrix, char *char_pointer)
     matrix->rows = maze->line_with_last_wall - maze->line_with_first_wall;
     matrix->array = malloc(sizeof(tile_t) * matrix->cols * matrix->rows);
     if (matrix->array == NULL) {
-        perror("couldn't allocate memory\n");
+        fputs("couldn't allocate memory\n", stderr);
         maze_destroy(maze); maze = NULL;
         matrix_destroy(matrix); matrix = NULL;
         free(char_pointer); char_pointer = NULL;
@@ -115,7 +115,7 @@ static bool solve(char *path, maze_t *maze, matrix_t *matrix)
     }
     FILE *output = fopen(path, "w");
     if (output == NULL) {
-        perror("couldn't open the program for writing\n");
+        perror("couldn't open the program for writing");
         maze_destroy(maze); maze = NULL;
         matrix_destroy(matrix); matrix = NULL;
         return false;

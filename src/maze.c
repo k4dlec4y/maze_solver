@@ -87,11 +87,11 @@ static bool check_amount_of_entrances_and_newline(char **char_p,
     size_t chars_loaded, size_t entrances)
 {
     if ((*char_p)[chars_loaded - 1] != '\n') {
-        perror("no newline at the end of file\n");
+        fputs("no newline at the end of file\n", stderr);
         return false;
     }
     if (entrances < 2) {
-        perror("less than 2 entrances\n");
+        fputs("less than 2 entrances\n", stderr);
         return false;
     }
     return true;
@@ -114,7 +114,7 @@ bool load_file(maze_t *maze, FILE *file, char **char_p)
             bytes_allocated *= 2;
             char *temp_p = realloc(*char_p, bytes_allocated * sizeof(char));
             if (temp_p == NULL) {
-                perror("insufficient memory\n");
+                fputs("insufficient memory\n", stderr);
                 return false;
             }
             *char_p = temp_p;
@@ -124,7 +124,7 @@ bool load_file(maze_t *maze, FILE *file, char **char_p)
 
         if (ch == WALL || ch == ENTRANCE) {
             if (ch == ENTRANCE && ++entrances > 2) {
-                perror("three or more entrances\n");
+                fputs("three or more entrances\n", stderr);
                 return false;
             }
             last_wall_in_line = cur_line_length;
