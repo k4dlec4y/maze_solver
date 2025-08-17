@@ -115,6 +115,10 @@ found, an error message is printed on `STDERR` and non-zero value is returned.
 `OUTPUT_FILE` will not be created in this case. 
 
 ## Tests
+To run cli tests, execute
+```bash
+./tests.sh
+```
 
 ## License
 
