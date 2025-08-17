@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include "check.h"
 
 #define SPACE ' '
@@ -201,8 +203,8 @@ bool check_outside(maze_t *maze, matrix_t *matrix, position_t p, dir_t d)
     }
     dir_t next = next_dir(matrix, &p, d);
     if (next == INVALID_DIRECTION) {
-        fprintf(stderr, "dead end was reached while checking outside, "
-                        "(this should not happen?)\n");
+        perror("dead end was reached while checking outside, "
+               "(this should not happen at all)\n");
         return false;
     }
     maze->lowest_x = min(maze->lowest_x, p.x);
