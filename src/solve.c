@@ -1,6 +1,8 @@
-#include "solve.h"
-#include "queue.h"
+#include <stdlib.h>
 #include <stdio.h>
+
+#include "../include/solve.h"
+#include "../include/queue.h"
 
 #define SPACE ' '
 #define ENTRANCE 'X'
