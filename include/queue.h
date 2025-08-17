@@ -2,7 +2,6 @@
 #define QUEUE_H
 
 #include <stdbool.h>
-#include <stdlib.h>
 #include <unistd.h>
 
 typedef struct node node_t;
